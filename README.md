@@ -6,6 +6,7 @@ The vFeed database is licensed and is not included in this repository. You will 
 Dependencies
 ============
 
+- .Net framework v4.5.2 or higher
 - System.Data.SQLLite ADO.Net data provider. This is included as a NuGet package. You can find additional info on this provider from the https://system.data.sqlite.org/ web site.
 
 Projects
