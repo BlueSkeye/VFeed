@@ -80,6 +80,15 @@ namespace SSUpdate
             }
             _connectionString = string.Format("Data Source={0};Version=3;",
                 _database.FullName);
+            try {
+                using (SQLiteConnection connection = new SQLiteConnection(_connectionString)) {
+                    connection.Open();
+                }
+            }
+            catch (Exception e) {
+                Console.WriteLine("Failed to connect to SQLite database : {0}", e.Message);
+                return false;
+            }
             return true;
         }
 
