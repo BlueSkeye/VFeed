@@ -3,13 +3,34 @@ using System.Collections.Generic;
 using System.IO;
 using System.Data.SQLite;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SSUpdate
 {
     public static class Program
     {
+        private static void AssertTableInfoColumnsOrder(SQLiteDataReader reader)
+        {
+            if (_tableInfoColumnOrderAlreadyAsserted) { return; }
+            int fieldsCount = reader.FieldCount;
+            if (6 < fieldsCount) {
+                throw new ApplicationException("TABLE INFO schema mismatch.");
+            }
+            if ("name" != reader.GetName(TableInfoNameColumIndex)) {
+                throw new ApplicationException("TABLE INFO name column schema mismatch.");
+            }
+            if ("type" != reader.GetName(TableInfoTypeColumIndex)) {
+                throw new ApplicationException("TABLE INFO type column schema mismatch.");
+            }
+            if ("notnull" != reader.GetName(TableInfoNullableFlagColumIndex)) {
+                throw new ApplicationException("TABLE INFO notnull column schema mismatch.");
+            }
+            if ("pk" != reader.GetName(TableInfoPrimaryKeyFlagColumIndex)) {
+                throw new ApplicationException("TABLE INFO pk column schema mismatch.");
+            }
+            _tableInfoColumnOrderAlreadyAsserted = true;
+            return;
+        }
+
         private static void DisplayUsage(string programName)
         {
             Console.WriteLine("{0} [-f <database path>|-h]");
@@ -29,6 +50,35 @@ namespace SSUpdate
             return;
         }
 
+        private static bool LoadSQLiteSchema()
+        {
+            Console.WriteLine("Validating input schema.");
+            using (SQLiteConnection connection = TryConnectToSQLite()) {
+                if (null == connection) { return false; }
+                using (SQLiteCommand retrieveTablesCommand =
+                    new SQLiteCommand(GetTableListCommand, connection))
+                {
+                    using (SQLiteDataReader reader = retrieveTablesCommand.ExecuteReader()) {
+                        while (reader.Read()) {
+                            _tablesByName.Add(reader.GetString(0), null);
+                        }
+                    }
+                }
+                foreach(string inputTable in _tablesByName.Keys) {
+                    try { VerifyTableDescription(connection, inputTable); }
+                    catch (Exception e) {
+                        Console.WriteLine("Failed to load schema for table '{0}' : {1}",
+                            inputTable, e.Message);
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        private static Dictionary<string, object> _tablesByName =
+            new Dictionary<string, object>();
+
         public static int Main(string[] args)
         {
             int result = 0;
@@ -37,10 +87,14 @@ namespace SSUpdate
 
             if (!ParseArgs(args)) {
                 _displayUsage = true;
+                result = 1;
             }
             if (_displayUsage) {
                 DisplayUsage(programName);
                 return result;
+            }
+            if (!LoadSQLiteSchema()) {
+                return 2;
             }
             return result;
         }
@@ -80,16 +134,23 @@ namespace SSUpdate
             }
             _connectionString = string.Format("Data Source={0};Version=3;",
                 _database.FullName);
+            using (SQLiteConnection connection = TryConnectToSQLite()) {
+                if (null == connection) { return false; }
+            }
+            return true;
+        }
+
+        private static SQLiteConnection TryConnectToSQLite()
+        {
             try {
-                using (SQLiteConnection connection = new SQLiteConnection(_connectionString)) {
-                    connection.Open();
-                }
+                SQLiteConnection connection = new SQLiteConnection(_connectionString);
+                connection.Open();
+                return connection;
             }
             catch (Exception e) {
                 Console.WriteLine("Failed to connect to SQLite database : {0}", e.Message);
-                return false;
+                return null;
             }
-            return true;
         }
 
         private static string TryGetAdditionalArgument(string[] from, ref int index)
@@ -115,8 +176,33 @@ namespace SSUpdate
             }
         }
 
+        private static object VerifyTableDescription(SQLiteConnection connection,
+            string tableName)
+        {
+            using (SQLiteCommand command = new SQLiteCommand(
+                string.Format(GetTableColumnsDescriptionCommand, tableName), connection))
+            {
+                using (SQLiteDataReader reader = command.ExecuteReader()) {
+                    if (!_tableInfoColumnOrderAlreadyAsserted) {
+                        AssertTableInfoColumnsOrder(reader);
+                    }
+                    throw new NotImplementedException();
+                }
+            }
+            return null;
+        }
+
+        private const string GetTableColumnsDescriptionCommand =
+            "PRAGMA table_info('{0}');";
+        private const string GetTableListCommand =
+            "SELECT NAME from sqlite_master";
+        private const int TableInfoNameColumIndex = 1;
+        private const int TableInfoTypeColumIndex = 2;
+        private const int TableInfoNullableFlagColumIndex = 3;
+        private const int TableInfoPrimaryKeyFlagColumIndex = 5;
         private static string _connectionString;
         private static FileInfo _database;
         private static bool _displayUsage;
+        private static bool _tableInfoColumnOrderAlreadyAsserted;
     }
 }
