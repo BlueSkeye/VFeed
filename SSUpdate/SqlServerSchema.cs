@@ -46,11 +46,11 @@
             "        [redhatid] sysname NULL," +
             "        [redhatovalid] sysname NULL," +
             "        [redhatupdatedesc] sysname NULL," +
-            "        [cveid] sysname NOT NULL CONSTRAINT CveRedhatNvd FOREIGN KEY REFERENCES [nvd_db]([cveid]));" +
+            "        [cveid] sysname NOT NULL);" +
             "CREATE TABLE[map_redhat_bugzilla] (" +
             "        [advisory_dateissue] sysname NULL," +
             "        [bugzillaid] sysname NULL," +
-            "        [bugzillatitle] sysname NULL," +
+            "        [bugzillatitle] nvarchar(512) NULL," +
             "        [redhatid] text NOT NULL);" +
             "CREATE TABLE[map_cve_suse] (" +
             "        [suseid] sysname NULL," +
@@ -65,59 +65,59 @@
             "        [saintexploitid] sysname NULL," +
             "        [saintexploittitle] sysname NULL," +
             "        [saintexploitlink] sysname NULL," +
-            "        [cveid] sysname NOT NULL CONSTRAINT CveSaintNvd FOREIGN KEY REFERENCES [nvd_db]([cveid]));" +
+            "        [cveid] sysname NOT NULL);" +
             "CREATE TABLE[map_cve_milw0rm] (" +
             "        [milw0rmid] sysname NULL," +
             "        [cveid] sysname NOT NULL CONSTRAINT CveMilw0rmNvd FOREIGN KEY REFERENCES [nvd_db]([cveid]));" +
             "CREATE TABLE[map_cve_osvdb] (" +
             "        [osvdbid] sysname NULL," +
-            "        [cveid] sysname NOT NULL CONSTRAINT CveOsvdbNvd FOREIGN KEY REFERENCES [nvd_db]([cveid]));" +
+            "        [cveid] sysname NOT NULL);" +
             "CREATE TABLE[map_cve_nessus] (" +
             "        [nessus_script_id] sysname NULL," +
             "        [nessus_script_file] sysname NULL," +
-            "        [nessus_script_name] sysname NULL," +
+            "        [nessus_script_name] nvarchar(512) NULL," +
             "        [nessus_script_family] sysname NULL," +
-            "        [cveid] sysname NOT NULL CONSTRAINT CveNessusNvd FOREIGN KEY REFERENCES [nvd_db]([cveid]));" +
+            "        [cveid] sysname NOT NULL);" +
             "CREATE TABLE[map_cve_msf] (" +
             "        [msfid] sysname NULL," +
             "        [msf_script_file] sysname NULL," +
             "        [msf_script_name] sysname NULL," +
-            "        [cveid] sysname NOT NULL CONSTRAINT CveMsfNvd FOREIGN KEY REFERENCES [nvd_db]([cveid]));" +
+            "        [cveid] sysname NOT NULL);" +
             "CREATE TABLE[map_cve_openvas] (" +
             "        [openvas_script_id] sysname NULL," +
             "        [openvas_script_file] sysname NULL," +
-            "        [openvas_script_name] sysname NULL," +
+            "        [openvas_script_name] varchar(512) NULL," +
             "        [openvas_script_family] sysname NULL," +
-            "        [cveid] sysname NOT NULL CONSTRAINT CveOpenvasNvd FOREIGN KEY REFERENCES [nvd_db]([cveid]));" +
+            "        [cveid] sysname NOT NULL);" +
             "CREATE TABLE[map_cve_scip] (" +
             "        [scipid] sysname NULL," +
             "        [sciplink] sysname NULL," +
-            "        [cveid] sysname NOT NULL CONSTRAINT CveScipNvd FOREIGN KEY REFERENCES [nvd_db]([cveid]));" +
+            "        [cveid] sysname NOT NULL);" +
             "CREATE TABLE[map_cve_iavm] (" +
             "        [iavmid] sysname NULL," +
             "        [disakey] sysname NULL," +
             "        [iavmtitle] sysname NULL," +
-            "        [cveid] sysname NOT NULL CONSTRAINT CveIavmNvd FOREIGN KEY REFERENCES [nvd_db]([cveid]));" +
+            "        [cveid] sysname NOT NULL);" +
             "CREATE TABLE[map_cve_cisco] (" +
             "        [ciscoid] sysname NULL," +
-            "        [cveid] sysname NOT NULL CONSTRAINT CveCiscoNvd FOREIGN KEY REFERENCES [nvd_db]([cveid]));" +
+            "        [cveid] sysname NOT NULL);" +
             "CREATE TABLE[map_cve_ubuntu] (" +
             "        [ubuntuid] sysname NULL," +
-            "        [cveid] sysname NOT NULL CONSTRAINT CveUbuntuNvd FOREIGN KEY REFERENCES [nvd_db]([cveid]));" +
+            "        [cveid] sysname NOT NULL);" +
             "CREATE TABLE[map_cve_gentoo] (" +
             "        [gentooid] sysname NULL," +
-            "        [cveid] sysname NOT NULL CONSTRAINT CveGentooNvd FOREIGN KEY REFERENCES [nvd_db]([cveid]));" +
+            "        [cveid] sysname NOT NULL);" +
             "CREATE TABLE[map_cve_fedora] (" +
             "        [fedoraid] sysname NULL," +
-            "        [cveid] sysname NOT NULL CONSTRAINT CveFedoraNvd FOREIGN KEY REFERENCES [nvd_db]([cveid]));" +
+            "        [cveid] sysname NOT NULL);" +
             "CREATE TABLE[map_cve_certvn] (" +
             "        [certvuid] sysname NULL," +
             "        [certvulink] sysname NULL," +
-            "        [cveid] sysname NOT NULL CONSTRAINT CveCertvnNvd FOREIGN KEY REFERENCES [nvd_db]([cveid]));" +
+            "        [cveid] sysname NOT NULL);" +
             "CREATE TABLE[map_cve_ms] (" +
             "        [msid] sysname NULL," +
-            "        [mstitle] sysname NULL," +
-            "        [cveid] sysname NOT NULL CONSTRAINT CveMsNvd FOREIGN KEY REFERENCES [nvd_db]([cveid]));" +
+            "        [mstitle] nvarchar(512) NULL," +
+            "        [cveid] sysname NOT NULL);" +
             "CREATE TABLE[map_cve_mskb] (" +
             "        [mskbid] sysname NULL," +
             "        [mskbtitle] sysname NULL," +
@@ -126,43 +126,43 @@
             "        [snort_id] sysname NULL," +
             "        [snort_sig] sysname NULL," +
             "        [snort_classtype] sysname NULL," +
-            "        [cveid] sysname NOT NULL CONSTRAINT CveSnortNvd FOREIGN KEY REFERENCES [nvd_db]([cveid]));" +
+            "        [cveid] sysname NOT NULL);" +
             "CREATE TABLE[map_cve_suricata] (" +
             "        [suricata_id] sysname NULL," +
-            "        [suricata_sig] sysname NULL," +
+            "        [suricata_sig] nvarchar(2048) NULL," +
             "        [suricata_classtype] sysname NULL," +
-            "        [cveid] sysname NOT NULL CONSTRAINT CveSuricataNvd FOREIGN KEY REFERENCES [nvd_db]([cveid]));" +
+            "        [cveid] sysname NOT NULL);" +
             "CREATE TABLE[map_cve_vmware] (" +
             "        [vmwareid] sysname NULL," +
-            "        [cveid] sysname NOT NULL CONSTRAINT CveVmwareNvd FOREIGN KEY REFERENCES [nvd_db]([cveid]));" +
+            "        [cveid] sysname NOT NULL);" +
             "CREATE TABLE[map_cve_bid] (" +
             "        [bidid] sysname NULL," +
-            "        [cveid] sysname NOT NULL CONSTRAINT CveBidNvd FOREIGN KEY REFERENCES [nvd_db]([cveid]));" +
+            "        [cveid] sysname NOT NULL);" +
             "CREATE TABLE[map_cve_hp] (" +
             "        [hpid] sysname NULL," +
-            "        [hplink] sysname NULL," +
-            "        [cveid] sysname NOT NULL CONSTRAINT CveHpNvd FOREIGN KEY REFERENCES [nvd_db]([cveid]));" +
+            "        [hplink] nvarchar(2048) NULL," +
+            "        [cveid] sysname NOT NULL);" +
             "CREATE TABLE[stat_new_cve] (" +
-            "        [new_cve_id] sysname NULL CONSTRAINT CveNewNvd FOREIGN KEY REFERENCES [nvd_db]([cveid])," +
-            "        [new_cve_summary] sysname NULL);" +
+            "        [new_cve_id] sysname NULL," +
+            "        [new_cve_summary] nvarchar(2048) NULL);" +
             "CREATE TABLE[map_cve_exploitdb] (" +
             "        [exploitdbid] sysname NULL," +
             "        [exploitdbscript] sysname NULL," +
-            "        [cveid] sysname NOT NULL CONSTRAINT CveExploitdbNvd FOREIGN KEY REFERENCES [nvd_db]([cveid]));" +
+            "        [cveid] sysname NOT NULL);" +
             "CREATE TABLE[map_cve_nmap] (" +
             "        [nmap_script_id] sysname NULL," +
             "        [nmap_script_cat] sysname NULL," +
-            "        [cveid] sysname NOT NULL CONSTRAINT CveNmapNvd FOREIGN KEY REFERENCES [nvd_db]([cveid]));" +
+            "        [cveid] sysname NOT NULL);" +
             "CREATE TABLE[map_cve_oval] (" +
             "        [ovalid] sysname NULL," +
             "        [ovalclass] sysname NULL," +
-            "        [ovaltitle] sysname NULL," +
+            "        [ovaltitle] nvarchar(2048) NULL," +
             "        [cpeid] sysname NULL," +
-            "        [cveid] sysname NOT NULL CONSTRAINT CveOvalNvd FOREIGN KEY REFERENCES [nvd_db]([cveid]));" +
+            "        [cveid] sysname NOT NULL);" +
             "CREATE TABLE[map_cve_d2] (" +
             "        [d2_script_name] sysname NULL," +
             "        [d2_script_file] sysname NULL," +
-            "        [cveid] sysname NOT NULL CONSTRAINT CveD2Nvd FOREIGN KEY REFERENCES [nvd_db]([cveid]));" +
+            "        [cveid] sysname NOT NULL);" +
             "CREATE TABLE[stat_vfeed_kpi] (" +
             "        [db_version] sysname NULL," +
             "        [total_cve] sysname NULL," +
@@ -204,11 +204,11 @@
             "        [capectitle] sysname NULL," +
             "        [attack] sysname NULL);" +
             "CREATE TABLE[capec_mit] (" +
-            "        [mitigation] sysname NULL," +
+            "        [mitigation] nvarchar(2048) NULL," +
             "        [capecid] text NOT NULL);" +
             "CREATE TABLE[cwe_wasc] (" +
             "        [wascname] sysname NULL," +
             "        [wascid] sysname NULL," +
-            "        [cweid] sysname NOT NULL CONSTRAINT CveWascNvd FOREIGN KEY REFERENCES [nvd_db]([cveid]));";
+            "        [cweid] sysname);";
     }
 }

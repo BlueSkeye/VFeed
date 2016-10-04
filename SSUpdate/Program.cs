@@ -201,6 +201,19 @@ namespace SSUpdate
             return builder.ToString();
         }
 
+        private static void CleanUpDb()
+        {
+            using(SqlConnection connection = ConnectToSqlServer()) {
+                for(int index = CleanUpScripts.Length - 1; 0 <= index; index--) {
+                    using (SqlCommand command = new SqlCommand(CleanUpScripts[index], connection)) {
+                        command.CommandTimeout = 60;
+                        command.ExecuteNonQuery();
+                        Console.Write(".");
+                    }
+                }
+            }
+        }
+
         private static SQLiteConnection ConnectToSQLite()
         {
             SQLiteConnection result = TryConnectToSQLite();
@@ -219,6 +232,7 @@ namespace SSUpdate
         {
             Console.WriteLine("{0} [-f <database path> -s <target SQL Server> -d <Sql Server database>|-h]");
             Console.WriteLine();
+            Console.WriteLine("-c : (optional) Perform cleanup before loading.");
             Console.WriteLine("-d : (optional) Sql Server vFeed database name (default vFeed).");
             Console.WriteLine("-f : path to vFeed database.");
             Console.WriteLine("-h : display this help notice.");
@@ -299,7 +313,7 @@ namespace SSUpdate
                         string insertCommand = GetInsertCommand(tableName, out parametersCount);
                         using (SQLiteCommand command = new SQLiteCommand(readCommand, sqliteConnection)) {
                             using(SQLiteDataReader reader = command.ExecuteReader()) {
-                                Transfer(sqlServerConnection, reader, insertCommand, parametersCount);
+                                Transfer(tableName, sqlServerConnection, reader, insertCommand, parametersCount);
                             }
                         }
                     }
@@ -358,6 +372,11 @@ namespace SSUpdate
                 DisplayUsage(programName);
                 return result;
             }
+            if (_doCleanup) {
+                Console.WriteLine("Cleaning up.");
+                CleanUpDb();
+                Console.WriteLine();
+            }
             if (!LoadSQLiteSchema()) { return 2; }
             if (!ImportData()) { return 3; }
             return result;
@@ -373,6 +392,9 @@ namespace SSUpdate
                 }
                 else {
                     switch (scannedArg.Substring(1).ToUpper()) {
+                        case "C":
+                            _doCleanup = true;
+                            break;
                         case "F":
                             string dbPath = TryGetAdditionalArgument(args, ref argIndex);
                             if (null == dbPath) { return false; }
@@ -425,8 +447,8 @@ namespace SSUpdate
             return true;
         }
 
-        private static void Transfer(SqlConnection sqlServerConnection, SQLiteDataReader reader,
-            string insertCommandText, int parametersCount)
+        private static void Transfer(string tableName, SqlConnection sqlServerConnection,
+            SQLiteDataReader reader, string insertCommandText, int parametersCount)
         {
             int linesCount = 0;
             using (SqlCommand insertCommand = new SqlCommand(insertCommandText, sqlServerConnection)) {
@@ -438,7 +460,25 @@ namespace SSUpdate
                     for(int index = 0; index < parametersCount; index++) {
                         parameters[index].Value = reader.GetValue(index);
                     }
-                    insertCommand.ExecuteNonQuery();
+                Retry:
+                    try { insertCommand.ExecuteNonQuery(); }
+                    catch (SqlException e) {
+                        switch (e.Number) {
+                            case 0x223:
+                                Console.WriteLine("Foreign key reference error. Faulting value is {0}",
+                                    parameters[parameters.Length - 1].Value);
+                                break;
+                            case 0x1FD8:
+                                if ("map_cve_mskb" != tableName) { goto default; }
+                                if (!(parameters[0].Value is string) || (parameters[1].Value is int)) { goto default; }
+                                object trash = parameters[0].Value;
+                                parameters[0].Value = parameters[1].Value;
+                                parameters[1].Value = trash;
+                                goto Retry;
+                            default:
+                                throw;
+                        }
+                    }
                     if (0 == (++linesCount % 1000)) { Console.Write("."); }
                 }
                 Console.WriteLine("\r\n\r{0} lines imported.", linesCount);
@@ -522,13 +562,12 @@ namespace SSUpdate
         private const int TableInfoPrimaryKeyFlagColumIndex = 5;
         private static FileInfo _database;
         private static bool _displayUsage;
+        private static bool _doCleanup;
 #if DEBUG
         /// <summary>For debugging purpose only. This allow us to bypass
         /// already loaded tables and quicker fix a failing table.</summary>
         /// <remarks>This table should be empty during normal use.</remarks>
         private static readonly string[] _ignoreTables = new string[] {
-            "nvd_db", "cwe_db", "cve_cwe", "cwe_category", "cwe_capec", "cve_cpe",
-            "cve_reference", "map_cve_aixapar"
         };
 #endif
         private static List<string> _inInsertionOrderTableNames;
@@ -548,5 +587,48 @@ namespace SSUpdate
             internal int PrimaryKey { get; set; }
             internal string Type { get; set; }
         }
+
+        private static readonly string[] CleanUpScripts = new string[] {
+            "DELETE nvd_db;",
+            "DELETE cwe_db;",
+            "DELETE cve_cwe;",
+            "DELETE cwe_category;",
+            "DELETE cwe_capec;",
+            "DELETE cve_cpe;",
+            "DELETE cve_reference;",
+            "DELETE map_cve_aixapar;",
+            "DELETE map_cve_redhat;",
+            "DELETE map_redhat_bugzilla;",
+            "DELETE map_cve_suse;",
+            "DELETE map_cve_debian;",
+            "DELETE map_cve_mandriva;",
+            "DELETE map_cve_saint;",
+            "DELETE map_cve_milw0rm;",
+            "DELETE map_cve_osvdb;",
+            "DELETE map_cve_nessus;",
+            "DELETE map_cve_msf;",
+            "DELETE map_cve_openvas;",
+            "DELETE map_cve_scip;",
+            "DELETE map_cve_iavm;",
+            "DELETE map_cve_cisco;",
+            "DELETE map_cve_ubuntu;",
+            "DELETE map_cve_gentoo;",
+            "DELETE map_cve_fedora;",
+            "DELETE map_cve_certvn;",
+            "DELETE map_cve_ms;",
+            "DELETE map_cve_mskb;",
+            "DELETE map_cve_snort;",
+            "DELETE map_cve_suricata;",
+            "DELETE map_cve_vmware;",
+            "DELETE map_cve_bid;",
+            "DELETE map_cve_hp;",
+            "DELETE stat_new_cve;",
+            "DELETE map_cve_exploitdb;",
+            "DELETE map_cve_nmap;",
+            "DELETE map_cve_oval;",
+            "DELETE map_cve_d2;",
+            "DELETE stat_vfeed_kpi;",
+            "DELETE capec_db;"
+        };
     }
 }
